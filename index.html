@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Graph Visualization</title>
+    <link rel="stylesheet" href="style.css">
+     
+</head>
+<body>
+    <h1>Interactive Graph Visualization</h1>
+    <div id="graph"></div>
+    <div class="controls">
+        <button onclick="addNode()">Add Node</button>
+        <button onclick="addEdge()">Add Edge</button>
+    </div>
+
+    <script>
+        let nodes = [];
+        let links = [];
+        let nodeId = 0;
+
+        function loadGraph() {
+            fetch('graph.txt')
+                .then(response => response.text())
+                .then(data => {
+                    const lines = data.trim().split('\n');
+                    lines.forEach(line => {
+                        const parts = line.split(' ');
+                        const node = { id: parts[0], x: Math.random() * 800, y: Math.random() * 600 };
+                        nodes.push(node);
+                        for (let i = 1; i < parts.length; i++) {
+                            links.push({ source: parts[0], target: parts[i] });
+                        }
+                    });
+                    updateGraph();
+                });
+        }
+
+        function updateGraph() {
+            const svg = document.getElementById('graph');
+            svg.innerHTML = '';
+
+            const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svgElement.setAttribute("width", 800);
+            svgElement.setAttribute("height", 600);
+            svg.appendChild(svgElement);
+
+            links.forEach(link => {
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                const sourceNode = nodes.find(node => node.id == link.source);
+                const targetNode = nodes.find(node => node.id == link.target);
+                line.setAttribute("x1", sourceNode.x);
+                line.setAttribute("y1", sourceNode.y);
+                line.setAttribute("x2", targetNode.x);
+                line.setAttribute("y2", targetNode.y);
+                line.setAttribute("class", "link");
+                svgElement.appendChild(line);
+            });
+
+            nodes.forEach(node => {
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", node.x);
+                circle.setAttribute("cy", node.y);
+                circle.setAttribute("r", 10);
+                circle.setAttribute("class", "node");
+                circle.addEventListener('click', () => alert(`Node ${node.id} clicked!`));
+                svgElement.appendChild(circle);
+            });
+        }
+
+        function addNode() {
+            const newNode = { id: nodeId++, x: Math.random() * 800, y: Math.random() * 600 };
+            nodes.push(newNode);
+            updateGraph();
+        }
+
+        function addEdge() {
+            if (nodes.length < 2) return;
+            const source = nodes[Math.floor(Math.random() * nodes.length)].id;
+            const target = nodes[Math.floor(Math.random() * nodes.length)].id;
+            if (source !== target) {
+                links.push({ source, target });
+                updateGraph();
+            }
+        }
+
+        loadGraph();
+    </script>
+</body>
+</html>
